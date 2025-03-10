@@ -1,14 +1,8 @@
-package com.act.act.subobject.model;
+package com.act.subobject.model;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.Objects;
 
@@ -18,8 +12,10 @@ import java.util.Objects;
 @Getter
 @Setter
 @AllArgsConstructor
-public class Subobject {
+@ToString
+public class SubObject {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "subobject_id")
     private Long id;
 
@@ -35,7 +31,7 @@ public class Subobject {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        Subobject subobject = (Subobject) o;
+        SubObject subobject = (SubObject) o;
         return Objects.equals(id, subobject.id) && Objects.equals(name, subobject.name);
     }
 
