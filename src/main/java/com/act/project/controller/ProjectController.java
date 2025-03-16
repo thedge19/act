@@ -6,10 +6,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping(path = "/projects")
 @RequiredArgsConstructor
 @Slf4j
+@CrossOrigin(origins = "http://localhost:5173")
 public class ProjectController {
 
     private final ProjectService projectService;
@@ -20,6 +23,12 @@ public class ProjectController {
         Project project = projectService.get(id);
         log.info("Get Project: {}", project);
         return project;
+    }
+
+    @GetMapping
+    public List<Project> getAll() {
+        log.info("Get all projects");
+        return projectService.getALL();
     }
 
     @PostMapping

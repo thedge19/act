@@ -6,10 +6,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping(path = "/standards")
 @RequiredArgsConstructor
 @Slf4j
+@CrossOrigin(origins = "http://localhost:5173")
 public class StandardController {
 
     private final StandardService standardService;
@@ -20,6 +23,12 @@ public class StandardController {
         Standard standard = standardService.get(id);
         log.info("Get Standard: {}", standard);
         return standard;
+    }
+
+    @GetMapping
+    public List<Standard> getAll() {
+        log.info("Get All Standards");
+        return standardService.getAll();
     }
 
     @PostMapping

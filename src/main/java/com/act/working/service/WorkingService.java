@@ -1,15 +1,18 @@
 package com.act.working.service;
 
 import com.act.working.dto.WorkingRequestDto;
-import com.act.working.dto.WorkingResponseDto;
 import com.act.working.model.Working;
 
+import java.util.List;
+
 public interface WorkingService {
-    WorkingResponseDto get(Long id);
+    Working get(Long id);
 
-    WorkingResponseDto create(WorkingRequestDto workingRequestDto);
+    List<Working> getAll(long id);
 
-    WorkingResponseDto update(long id, WorkingRequestDto requestDto);
+    Working create(WorkingRequestDto workingRequestDto);
+
+    Working update(long id, WorkingRequestDto requestDto);
 
     void delete(long id);
 

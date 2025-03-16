@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -17,6 +19,11 @@ public class SubObjectServiceImplementation implements SubObjectService {
     @Override
     public SubObject get(Long id) {
         return subObjectRepository.findById(id).orElse(null);
+    }
+
+    @Override
+    public List<SubObject> getAll(long id) {
+        return subObjectRepository.findAllByProjectIdOrderByIdAsc(id);
     }
 
     @Transactional

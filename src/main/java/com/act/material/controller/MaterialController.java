@@ -6,10 +6,13 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping(path = "/materials")
 @RequiredArgsConstructor
 @Slf4j
+@CrossOrigin(origins = "http://localhost:5173")
 public class MaterialController {
 
     private final MaterialService materialService;
@@ -20,6 +23,12 @@ public class MaterialController {
         Material material = materialService.get(id);
         log.info("Get Material: {}", material);
         return material;
+    }
+
+    @GetMapping
+    public List<Material> getAll() {
+        log.info("Get all Materials");
+        return materialService.getAll();
     }
 
     @PostMapping

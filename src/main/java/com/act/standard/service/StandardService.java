@@ -2,8 +2,12 @@ package com.act.standard.service;
 
 import com.act.standard.model.Standard;
 
+import java.util.List;
+
 public interface StandardService {
     Standard get(Long id);
+
+    List<Standard> getAll();
 
     Standard create(Standard standard);
 

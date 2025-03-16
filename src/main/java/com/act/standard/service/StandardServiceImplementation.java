@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
@@ -17,6 +19,11 @@ public class StandardServiceImplementation implements StandardService {
     @Override
     public Standard get(Long id) {
         return standardRepository.findById(id).orElse(null);
+    }
+
+    @Override
+    public List<Standard> getAll() {
+        return standardRepository.findAll();
     }
 
     @Transactional

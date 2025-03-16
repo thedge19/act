@@ -1,5 +1,6 @@
 package com.act.subobject.model;
 
+import com.act.project.model.Project;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.*;
@@ -26,6 +27,12 @@ public class SubObject {
     @Column(name = "subobject_title")
     @NotEmpty
     private String title;
+
+    @JoinColumn(name = "project_id")
+    @NonNull
+    @ManyToOne
+    private Project project;
+
 
     @Override
     public boolean equals(Object o) {

@@ -2,8 +2,12 @@ package com.act.subobject.service;
 
 import com.act.subobject.model.SubObject;
 
+import java.util.List;
+
 public interface SubObjectService {
     SubObject get(Long id);
+
+    List<SubObject> getAll(long id);
 
     SubObject create(SubObject subObject);
 
