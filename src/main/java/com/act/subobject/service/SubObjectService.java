@@ -7,7 +7,9 @@ import java.util.List;
 public interface SubObjectService {
     SubObject get(Long id);
 
-    List<SubObject> getAll(long id);
+    List<SubObject> getAll();
+
+    List<SubObject> getAllByProjectId(long id);
 
     SubObject create(SubObject subObject);
 

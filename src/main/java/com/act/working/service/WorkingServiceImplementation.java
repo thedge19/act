@@ -3,6 +3,7 @@ package com.act.working.service;
 import com.act.exception.exception.NotFoundException;
 import com.act.working.dto.WorkingMapper;
 import com.act.working.dto.WorkingRequestDto;
+import com.act.working.dto.WorkingUpdateDto;
 import com.act.working.model.Working;
 import com.act.working.repository.WorkingRepository;
 import lombok.RequiredArgsConstructor;
@@ -38,24 +39,24 @@ public class WorkingServiceImplementation implements WorkingService {
 
     @Transactional
     @Override
-    public Working update(long id, WorkingRequestDto requestDto) {
+    public Working update(long id, WorkingUpdateDto dto) {
         Working updatedWorking = findWorkingOrNot(id);
         log.info("Updating working with id: {}, name {}, standard {}", updatedWorking.getId(), updatedWorking.getName(), updatedWorking.getStandard().getName());
 
-        if (requestDto.getName() != null) {
-            updatedWorking.setName(requestDto.getName());
+        if (dto.getName() != null) {
+            updatedWorking.setName(dto.getName());
         }
 
-        if (requestDto.getUnits() != null) {
-            updatedWorking.setUnits(requestDto.getUnits());
+        if (dto.getUnits() != null) {
+            updatedWorking.setUnits(dto.getUnits());
         }
 
-        if (requestDto.getQuantity() != null)  {
-            updatedWorking.setQuantity(requestDto.getQuantity());
+        if (dto.getQuantity() != null)  {
+            updatedWorking.setQuantity(dto.getQuantity());
         }
 
-        if (requestDto.getDone() != null) {
-            updatedWorking.setDone(requestDto.getDone());
+        if (dto.getDone() != null) {
+            updatedWorking.setDone(dto.getDone());
         }
 
         log.info("Updating working standard {}, units {}, quantity {}", updatedWorking.getStandard().getName(), updatedWorking.getUnits(), updatedWorking.getQuantity());

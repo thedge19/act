@@ -1,13 +1,12 @@
 package com.act.act.service;
 
-import com.act.act.dto.ActMapper;
-import com.act.act.dto.ActRequestDto;
-import com.act.act.dto.ActResponseDto;
+import com.act.act.dto.*;
 import com.act.act.model.Act;
 import com.act.act.model.EntranceControl;
 import com.act.act.repository.ActRepository;
 import com.act.act.repository.EntranceControlRepository;
 import com.act.exception.exception.NotFoundException;
+import com.act.project.model.Project;
 import com.act.project.service.ProjectService;
 import com.act.subobject.model.SubObject;
 import com.act.subobject.service.SubObjectService;
@@ -20,10 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -36,7 +32,10 @@ public class ActServiceImplementation implements ActService {
     private final SubObjectService subObjectService;
     private final WorkingService workingService;
     private final EntranceControlRepository entranceControlRepository;
-    private final static String MATERIALS_FOR_ACT = "Акт результатов входного контроля МТР и оборудования №";
+    private final static String CONTROL_ACT = "Акт результатов входного контроля МТР и оборудования №";
+    private final static String EXECUTIVE_SCHEMA = "Исполнительная схема №";
+    private final static String SETS_OF_RULES = " СП 48.13330.2019 «Организация строительства»; СП 49.13330.2010\n" +
+            "«Безопасность труда в строительстве» ";
 
     @Override
     public ActResponseDto get(Long id) {
@@ -44,8 +43,19 @@ public class ActServiceImplementation implements ActService {
     }
 
     @Override
+    public ActUpdateResponseDto getUpdatedAct(long id) {
+        return ActMapper.INSTANCE.toUpdateDto(findActOrNot(id));
+    }
+
+    @Override
     public List<ActResponseDto> getAll() {
-        List<Act> acts = actRepository.findAll();
+        List<Act> acts = actRepository.findAllByOrderByEndDateAscActNumberAsc();
+        return acts.stream().map(ActMapper.INSTANCE::toDto).toList();
+    }
+
+    @Override
+    public List<ActResponseDto> findAllByEndDateBetween(LocalDate startDate, LocalDate endDate) {
+        List<Act> acts = actRepository.findAllByEndDateBetweenOrderByEndDateAscActNumberAsc(startDate, endDate);
         return acts.stream().map(ActMapper.INSTANCE::toDto).toList();
     }
 
@@ -59,16 +69,33 @@ public class ActServiceImplementation implements ActService {
     public Act create(ActRequestDto requestDto) {
         Act act = new Act();
 
-        log.info(requestDto.toString());
-
         SubObject subObject = subObjectService.get(requestDto.getSubObjectId());
-        act.setActNumber(subObject.getTitle() + "/" + (actRepository.countBySubObject(subObject) + 1));
 
-        act.setProject(projectService.findProjectOrNot(requestDto.getProjectId()));
+        String actSequenceNumber = String.valueOf(actRepository.countBySubObject(subObject) + 1);
+        actSequenceNumber = actSequenceNumber.length() == 1 ? "0" + actSequenceNumber : actSequenceNumber;
+
+        String actNumber = subObject.getTitle() + "/" + actSequenceNumber;
+
+        Project project = projectService.findProjectOrNot(requestDto.getProjectId());
+        String projectName = project.getName();
+
+        act.setActNumber(actNumber);
+        act.setProject(project);
+
         act.setSubObject(subObjectService.findSubObjectOrNot(requestDto.getSubObjectId()));
 
         Working working = workingService.findWorkingOrNot(requestDto.getWorkId());
+        Working nextworking = workingService.findWorkingOrNot(requestDto.getNextWorkId());
+        working.setDone(requestDto.getWorkDone());
+
+        String standard = working.getStandard().getName();
+
+
+        String inAccordWith = projectName.split("\\.")[2] + "; " + SETS_OF_RULES + "; " + standard;
+        act.setInAccordWith(inAccordWith);
+
         act.setWorks(subObject.getName() + ": " + working.getName() + " - " + requestDto.getWorkDone() + " " + working.getUnits());
+        act.setNextWorks(subObject.getName() + ": " + nextworking.getName());
 
         act.setStartDate(jsDateToLocalDate(requestDto.getStartDate()));
         act.setEndDate(jsDateToLocalDate(requestDto.getEndDate()));
@@ -83,9 +110,12 @@ public class ActServiceImplementation implements ActService {
                 .toList());
 
         act.setMaterials(materials);
-
-        act = actRepository.save(act);
-
+        act.setSubmittedDocuments(addSubmittedDocuments(requestDto, actNumber));
+        try {
+            act = actRepository.save(act);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         addEntranceControl(act, requestDto);
 
 
@@ -94,14 +124,10 @@ public class ActServiceImplementation implements ActService {
 
     @Transactional
     @Override
-    public Act update(long id, ActRequestDto requestDto) {
-        Act updatedAct = findActOrNot(id);
-//
-//        if (act.getName() != null) {
-//            updatedAct.setName(act.getName());
-//        }
-
-        return actRepository.save(updatedAct);
+    public Act update(long id, ActUpdateRequestDto requestDto) {
+        Act act = findActOrNot(id);
+        act.setWorks(requestDto.getWorks());
+        return actRepository.save(act);
     }
 
     @Transactional
@@ -116,13 +142,13 @@ public class ActServiceImplementation implements ActService {
         entranceControlRepository.deleteById(id);
     }
 
-
     @Override
     public Act findActOrNot(long id) {
-        return actRepository.findById(id).orElseThrow(() -> new NotFoundException("Подобъект не найден"));
+        return actRepository.findById(id).orElseThrow(() -> new NotFoundException("Акт найден"));
     }
 
-    private LocalDate jsDateToLocalDate(String date) {
+    @Override
+    public LocalDate jsDateToLocalDate(String date) {
         String[] arr = date.split(" ");
 
         int year = Integer.parseInt(arr[3]);
@@ -147,9 +173,7 @@ public class ActServiceImplementation implements ActService {
         List<ActRequestDto.ActMaterial> actMaterials = requestDto.getActMaterials();
         int counter = 1;
 
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
         LocalDate controlDate = jsDateToLocalDate(requestDto.getControlDate());
-        String formattedDate = controlDate.format(formatter);
 
         for (ActRequestDto.ActMaterial actMaterial : actMaterials) {
             EntranceControl entranceControl = new EntranceControl();
@@ -177,7 +201,42 @@ public class ActServiceImplementation implements ActService {
         }
     }
 
-    private String addMaterialParameter(ActRequestDto requestDto) {
-        return null;
+    private String addSubmittedDocuments(ActRequestDto requestDto, String actNumber) {
+        List<String> submittedDocuments = new ArrayList<>();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
+        LocalDate controlDate = jsDateToLocalDate(requestDto.getControlDate());
+        LocalDate endDate = jsDateToLocalDate(requestDto.getEndDate());
+        String formattedControlDate = controlDate.format(formatter);
+        String formattedEndDate = endDate.format(formatter);
+
+        if (Objects.equals(requestDto.getExecutiveSchema(), "Есть")) {
+            submittedDocuments.add(EXECUTIVE_SCHEMA + actNumber + " от " + formattedEndDate + " г.");
+        }
+
+        List<ActRequestDto.ActMaterial> materials = requestDto.getActMaterials();
+
+        switch (materials.size()) {
+            case 0:
+                break;
+            case 1:
+                submittedDocuments.add(CONTROL_ACT + actNumber + " от " + formattedControlDate + " г.");
+                break;
+            default:
+                for (int count = 0; count < materials.size(); count++) {
+                    submittedDocuments.add(CONTROL_ACT + actNumber + "-" + (count + 1) + " от " + formattedControlDate + " г.");
+                }
+                break;
+        }
+
+        return String.join("; ", submittedDocuments);
+    }
+
+    private String addInAccordWith(String projectName, String standard) {
+        return projectName.split("\\.")[2] + "; " + SETS_OF_RULES + "; " + standard;
+    };
+
+    @Override
+    public List<EntranceControl> controls(Act act) {
+        return entranceControlRepository.findAllByAct(act);
     }
 }

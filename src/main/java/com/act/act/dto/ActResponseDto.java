@@ -19,4 +19,10 @@ public class ActResponseDto {
     private String endDate;
 
     private String materials;
+
+    private String submittedDocuments;
+
+    private String inAccordWith;
+
+    private String nextWorks;
 }

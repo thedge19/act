@@ -1,6 +1,7 @@
 package com.act.working.controller;
 
 import com.act.working.dto.WorkingRequestDto;
+import com.act.working.dto.WorkingUpdateDto;
 import com.act.working.model.Working;
 import com.act.working.service.WorkingService;
 import lombok.RequiredArgsConstructor;
@@ -28,7 +29,7 @@ public class WorkingController {
 
     @GetMapping("/{id}")
     public List<Working> getAll(@PathVariable Long id) {
-        log.info("Get All Working List");
+        log.info("Get All by SubObject id: {}", id);
         return workingService.getAll(id);
     }
 
@@ -43,9 +44,9 @@ public class WorkingController {
 
     @PatchMapping("/{id}")
     public Working update(@PathVariable long id,
-                            @RequestBody WorkingRequestDto requestDto) {
+                          @RequestBody WorkingUpdateDto dto) {
         log.info("Update Working: {}", id);
-        Working workingUpdated = workingService.update(id, requestDto);
+        Working workingUpdated = workingService.update(id, dto);
         log.info("Update Working: {}", workingUpdated);
         return workingUpdated;
     }

@@ -18,4 +18,6 @@ public interface WorkingMapper {
     @Mapping(target = "subObject.id", source = "subObjectId")
     @Mapping(target = "standard.id", source = "standardId")
     Working toEntity(WorkingRequestDto workingDto);
+
+    Working updateEntity(WorkingUpdateDto updateDto);
 }

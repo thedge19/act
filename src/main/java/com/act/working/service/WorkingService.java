@@ -1,6 +1,7 @@
 package com.act.working.service;
 
 import com.act.working.dto.WorkingRequestDto;
+import com.act.working.dto.WorkingUpdateDto;
 import com.act.working.model.Working;
 
 import java.util.List;
@@ -12,7 +13,7 @@ public interface WorkingService {
 
     Working create(WorkingRequestDto workingRequestDto);
 
-    Working update(long id, WorkingRequestDto requestDto);
+    Working update(long id, WorkingUpdateDto dto);
 
     void delete(long id);
 

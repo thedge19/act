@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -17,18 +18,15 @@ public class SubObjectController {
 
     private final SubObjectService subObjectService;
 
-//    @GetMapping("/{id}")
-//    public SubObject get(@PathVariable Long id) {
-//        log.info("Get SubObject by id: {}", id);
-//        SubObject subObject = subObjectService.get(id);
-//        log.info("Get SubObject: {}", subObject);
-//        return subObject;
-//    }
+    @GetMapping
+    public List<SubObject> getAll() {
+        return subObjectService.getAll();
+    }
 
     @GetMapping("/{id}")
     public List<SubObject> getAllByProjectId(@PathVariable long id) {
         log.info("Get all SubObjects");
-        return subObjectService.getAll(id);
+        return subObjectService.getAllByProjectId(id);
     }
 
     @PostMapping

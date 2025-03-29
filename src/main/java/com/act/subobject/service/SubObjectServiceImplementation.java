@@ -16,15 +16,23 @@ public class SubObjectServiceImplementation implements SubObjectService {
 
     private final SubObjectRepository subObjectRepository;
 
+
+
     @Override
     public SubObject get(Long id) {
         return subObjectRepository.findById(id).orElse(null);
     }
 
     @Override
-    public List<SubObject> getAll(long id) {
+    public List<SubObject> getAllByProjectId(long id) {
         return subObjectRepository.findAllByProjectIdOrderByIdAsc(id);
     }
+
+    @Override
+    public List<SubObject> getAll() {
+        return subObjectRepository.findAll();
+    }
+
 
     @Transactional
     @Override

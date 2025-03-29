@@ -23,7 +23,8 @@ public class MaterialServiceImplementation implements MaterialService {
 
     @Override
     public List<Material> getAll() {
-        return materialRepository.findAllByOrderByIdAsc();
+
+        return materialRepository.findAllByOrderByName();
     }
 
     @Transactional

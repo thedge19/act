@@ -1,5 +1,6 @@
 package com.act.act.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Data;
@@ -31,6 +32,11 @@ public class ActRequestDto {
     private String controlDate;
 
     private List<ActMaterial> actMaterials;
+
+    @NotBlank
+    private String executiveSchema;
+
+    private Long nextWorkId;
 
     @Data
     @Builder

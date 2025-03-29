@@ -14,9 +14,10 @@ public interface ActMapper {
     @Mapping(target = "startDate", source = "startDate", dateFormat = "dd-MM-yyyy")
     @Mapping(target = "endDate", source = "endDate", dateFormat = "dd-MM-yyyy")
     @Mapping(target="materials", source = "materials")
+    @Mapping(target="submittedDocuments", source = "submittedDocuments")
+    @Mapping(target="inAccordWith", source = "inAccordWith")
+    @Mapping(target="nextWorks", source = "nextWorks")
     ActResponseDto toDto(Act act);
 
-//    @Mapping(target = "subObject.id", source = "subObjectId")
-//    @Mapping(target = "project.id", source = "projectId")
-//    Act toEntity(ActRequestDto requestDto);
+    ActUpdateResponseDto toUpdateDto(Act act);
 }
