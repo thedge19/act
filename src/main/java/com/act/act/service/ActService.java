@@ -1,9 +1,6 @@
 package com.act.act.service;
 
-import com.act.act.dto.ActRequestDto;
-import com.act.act.dto.ActResponseDto;
-import com.act.act.dto.ActUpdateRequestDto;
-import com.act.act.dto.ActUpdateResponseDto;
+import com.act.act.dto.*;
 import com.act.act.model.Act;
 import com.act.act.model.EntranceControl;
 
@@ -31,7 +28,16 @@ public interface ActService {
 
     Act findActOrNot(long id);
 
+    EntranceControl findEntranceControl(long id);
+
     List<EntranceControl> controls(Act act);
 
+    EntranceControl updateEntranceControl(long id, EntranceControlRequestDto requestDto);
+
     LocalDate jsDateToLocalDate(String date);
+
+    List<ActResponseDto> filterBySubObject();
+
+    List<ActResponseDto> getAllWithNullInRegistries();
+
 }

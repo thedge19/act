@@ -33,6 +33,12 @@ public class WorkingController {
         return workingService.getAll(id);
     }
 
+    @GetMapping("/undone/{id}")
+    public List<Working> getAllByPositiveDone(@PathVariable Long id) {
+        log.info("Get All By Positive Done");
+        return workingService.getAllByPositiveDone(id);
+    }
+
     @PostMapping
     public Working create(
             @RequestBody WorkingRequestDto workingDto) {

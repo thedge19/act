@@ -42,7 +42,7 @@ public class MaterialServiceImplementation implements MaterialService {
             updatedMaterial.setName(material.getName());
         }
 
-        return materialRepository.save(updatedMaterial);
+        return updatedMaterial;
     }
 
     @Transactional

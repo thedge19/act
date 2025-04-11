@@ -1,5 +1,6 @@
 package com.act.subobject.controller;
 
+import com.act.subobject.dto.SubObjectRequestDto;
 import com.act.subobject.model.SubObject;
 import com.act.subobject.service.SubObjectService;
 import lombok.RequiredArgsConstructor;
@@ -31,9 +32,9 @@ public class SubObjectController {
 
     @PostMapping
     public SubObject create(
-            @RequestBody SubObject subObject) {
-        log.info("Create SubObject: {}", subObject.getName());
-        SubObject subObjectCreated = subObjectService.create(subObject);
+            @RequestBody SubObjectRequestDto dto) {
+        log.info("Create SubObject: {}", dto.getName());
+        SubObject subObjectCreated = subObjectService.create(dto);
         log.info("Create SubObject: {}", subObjectCreated);
         return subObjectCreated;
     }

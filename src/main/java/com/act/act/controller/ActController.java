@@ -1,9 +1,6 @@
 package com.act.act.controller;
 
-import com.act.act.dto.ActRequestDto;
-import com.act.act.dto.ActResponseDto;
-import com.act.act.dto.ActUpdateRequestDto;
-import com.act.act.dto.ActUpdateResponseDto;
+import com.act.act.dto.*;
 import com.act.act.model.Act;
 import com.act.act.model.EntranceControl;
 import com.act.act.model.SelectedPeriod;
@@ -44,11 +41,24 @@ public class ActController {
         return actService.getAll();
     }
 
+    @GetMapping("/nullInRegistries")
+    public List<ActResponseDto> getAllWithNullInRegistries() {
+        List<ActResponseDto> responseDtos = actService.getAllWithNullInRegistries();
+        log.info("Get Acts with null in registries: {}", responseDtos.size());
+        return actService.getAllWithNullInRegistries();
+    }
+
+    @GetMapping("/entrance/{id}")
+    public EntranceControl getEntranceControl(@PathVariable long id) {
+        log.info("Get control with id: {}", id);
+        return actService.findEntranceControl(id);
+    }
+
     @GetMapping("/entrance")
-    public List<EntranceControl> getAllEntranceControl() {
-        log.info("Get all Acts");
+    public List<EntranceControl> getEntranceControls() {
         return actService.getAllEntranceControl();
     }
+
 
     @PostMapping
     public Act create(
@@ -65,6 +75,14 @@ public class ActController {
         Act actUpdated = actService.update(id, requestDto);
         log.info("Update Act: {}", actUpdated);
         return actUpdated;
+    }
+
+    @PatchMapping("/entrance/{id}")
+    public EntranceControl updateEntranceControl(@PathVariable long id,
+                            @RequestBody EntranceControlRequestDto requestDto) {
+        EntranceControl entranceControl = actService.updateEntranceControl(id, requestDto);
+        log.info("Update Act: {}", entranceControl.getId());
+        return entranceControl;
     }
 
 
@@ -88,8 +106,18 @@ public class ActController {
         excelService.writeExcel(selectedPeriod);
     }
 
+    @GetMapping("/excelControl")
+    public void writeExcelControlFile() throws IOException {
+        excelService.writeExcelControl();
+    }
+
     @DeleteMapping("/excel")
     public void deleteWorkbookSheets() throws IOException {
         excelService.removeSheets();
+    }
+
+    @GetMapping("/filterBySubObject")
+    public List<ActResponseDto> filterBySubObject() {
+        return actService.filterBySubObject();
     }
 }
