@@ -1,11 +1,7 @@
 package com.act.act.dto;
 
-import com.act.act.model.Act;
-import com.act.project.model.Project;
-import jakarta.persistence.*;
-import lombok.*;
-
-import java.time.LocalDate;
+import lombok.Builder;
+import lombok.Data;
 
 @Data
 @Builder

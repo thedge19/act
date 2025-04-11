@@ -8,7 +8,6 @@ import com.act.act.model.EntranceControl;
 import com.act.act.model.SelectedPeriod;
 import com.act.act.repository.EntranceControlRepository;
 import com.act.act.service.ActService;
-import com.act.excel.service.CellStyler;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
@@ -140,9 +139,6 @@ public class ExcelServiceImplementation implements ExcelService {
         Workbook workbook = new XSSFWorkbook(fis);
 
         int total = workbook.getNumberOfSheets();
-
-        Sheet sheet = workbook.getSheetAt(0);
-        String value = sheet.getRow(85).getCell(0).getStringCellValue();
 
         for (int i = total - 1; i >= 2; i--) {
             workbook.removeSheetAt(i);
