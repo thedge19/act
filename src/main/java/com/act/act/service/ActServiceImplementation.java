@@ -125,7 +125,7 @@ public class ActServiceImplementation implements ActService {
         try {
             act = actRepository.save(act);
         } catch (Exception e) {
-            e.printStackTrace();
+            log.info(e.getMessage());
         }
         addEntranceControl(act, requestDto);
 
@@ -174,7 +174,7 @@ public class ActServiceImplementation implements ActService {
         Integer[] values = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12};
         String[] keys = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"};
 
-        Map<String, Integer> monthMap = new HashMap<String, Integer>();
+        Map<String, Integer> monthMap = new HashMap<>();
 
         for (int i = 0; i < keys.length; i++) {
             monthMap.put(keys[i], values[i]);

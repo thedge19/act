@@ -131,15 +131,15 @@ public class WorkLogServiceImplementation implements WorkLogService {
 
             workLog.setWorkDate(d);
             Set<Long> rowKeySet = logRows.get(d).keySet();
-            String workLogName = "";
+            StringBuilder workLogName = new StringBuilder();
 
             for (Long rowKey : rowKeySet) {
-                workLogName = workLogName + subObjectService.get(rowKey).getName() + ": ";
+                workLogName.append(subObjectService.get(rowKey).getName()).append(": ");
                 for (String work : logRows.get(d).get(rowKey)) {
-                    workLogName = workLogName + work + "; ";
+                    workLogName.append(work).append("; ");
                 }
             }
-            workLog.setName(workLogName);
+            workLog.setName(workLogName.toString());
             workLog.setWorkLogNumber(i);
             workLogRepository.save(workLog);
 
