@@ -52,7 +52,6 @@ public class RegistryServiceImplementation implements RegistryService {
     @Override
     public List<RegistryResponseDto> getAllByMonth(int monthId) {
         List<Registry> registries = registryRepository.findAllByOrderByAddingTimeAsc(monthId);
-        log.info("Size {}", registries.size());
         return registries.stream().map(RegistryMapper.INSTANCE::toDto).collect(Collectors.toList());
     }
 
