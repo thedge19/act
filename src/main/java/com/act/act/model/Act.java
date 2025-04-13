@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Objects;
 
@@ -61,6 +62,13 @@ public class Act {
 
     @Column(name = "act_next_works")
     private String nextWorks;
+
+    @Column(name = "act_work_done")
+    @NotNull
+    private BigDecimal workDone;
+
+    @Column(name = "in_registry")
+    private String inRegistry;
 
     @Override
     public boolean equals(Object o) {

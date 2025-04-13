@@ -2,9 +2,6 @@ package com.act.act.model;
 
 import com.act.project.model.Project;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -41,10 +38,16 @@ public class EntranceControl {
     @Column(name = "control_documents")
     private String documents;
 
+    @Column(name = "control_document_author")
+    private String author;
+
     @Column(name = "control_standard")
     private String standard;
 
     @ManyToOne
     @JoinColumn(name = "control_act_id")
     private Act act;
+
+    @Column(name = "control_sheet_numbers")
+    private Integer controlSheetNumbers;
 }

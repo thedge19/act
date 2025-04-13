@@ -25,4 +25,6 @@ public class ActResponseDto {
     private String inAccordWith;
 
     private String nextWorks;
+
+    private String inRegistry;
 }

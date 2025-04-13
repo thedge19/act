@@ -17,7 +17,13 @@ public interface ActMapper {
     @Mapping(target="submittedDocuments", source = "submittedDocuments")
     @Mapping(target="inAccordWith", source = "inAccordWith")
     @Mapping(target="nextWorks", source = "nextWorks")
+    @Mapping(target="inRegistry", source = "inRegistry")
     ActResponseDto toDto(Act act);
 
     ActUpdateResponseDto toUpdateDto(Act act);
+
+    @Mapping(target="actNumber", source = "actNumber")
+    @Mapping(target="works", source = "works")
+    @Mapping(target = "endDate", source = "endDate", dateFormat = "dd.MM.yyyy")
+    ActLogResponseDto toLogDto(Act act);
 }

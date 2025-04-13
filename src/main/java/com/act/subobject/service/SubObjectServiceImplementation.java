@@ -1,6 +1,8 @@
 package com.act.subobject.service;
 
 import com.act.exception.exception.NotFoundException;
+import com.act.subobject.dto.SubObjectMapper;
+import com.act.subobject.dto.SubObjectRequestDto;
 import com.act.subobject.model.SubObject;
 import com.act.subobject.repository.SubObjectRepository;
 import lombok.RequiredArgsConstructor;
@@ -36,8 +38,8 @@ public class SubObjectServiceImplementation implements SubObjectService {
 
     @Transactional
     @Override
-    public SubObject create(SubObject subObject) {
-        return subObjectRepository.save(subObject);
+    public SubObject create(SubObjectRequestDto dto) {
+        return subObjectRepository.save(SubObjectMapper.INSTANCE.toEntity(dto));
     }
 
     @Transactional

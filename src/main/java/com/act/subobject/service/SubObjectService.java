@@ -1,5 +1,6 @@
 package com.act.subobject.service;
 
+import com.act.subobject.dto.SubObjectRequestDto;
 import com.act.subobject.model.SubObject;
 
 import java.util.List;
@@ -11,7 +12,7 @@ public interface SubObjectService {
 
     List<SubObject> getAllByProjectId(long id);
 
-    SubObject create(SubObject subObject);
+    SubObject create(SubObjectRequestDto dto);
 
     SubObject update(long id, SubObject subObject);
 

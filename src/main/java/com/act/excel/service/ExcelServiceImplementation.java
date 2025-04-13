@@ -1,15 +1,17 @@
 package com.act.excel.service;
 
 import com.act.act.dto.ActResponseDto;
+import com.act.act.dto.EntranceControlExportDto;
+import com.act.act.dto.EntranceControlMapper;
 import com.act.act.model.Act;
 import com.act.act.model.EntranceControl;
 import com.act.act.model.SelectedPeriod;
+import com.act.act.repository.EntranceControlRepository;
 import com.act.act.service.ActService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellUtil;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 
@@ -18,9 +20,9 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
@@ -29,6 +31,7 @@ import java.util.stream.IntStream;
 @RequiredArgsConstructor
 public class ExcelServiceImplementation implements ExcelService {
     private final ActService actService;
+    private final EntranceControlRepository entranceControlRepository;
 
     String path = "C:\\Users\\PC\\IdeaProjects\\AOSR\\AOSR\\act\\act.xlsx";
     File file = new File(path);
@@ -137,16 +140,94 @@ public class ExcelServiceImplementation implements ExcelService {
 
         int total = workbook.getNumberOfSheets();
 
-        Sheet sheet = workbook.getSheetAt(0);
-        String value = sheet.getRow(85).getCell(0).getStringCellValue();
-
-        log.info(String.valueOf(value.length()));
-
         for (int i = total - 1; i >= 2; i--) {
             workbook.removeSheetAt(i);
             log.info("Removed sheet {}", i);
             workbook.write(new FileOutputStream(file));
         }
+        workbook.close();
+        fis.close();
+    }
+
+    @Override
+    public void writeExcelControl() throws IOException {
+        String path = "C:\\Users\\PC\\IdeaProjects\\AOSR\\AOSR\\act\\entrance_control.xlsx";
+        File file = new File(path);
+
+        log.info("Здесь");
+
+        FileInputStream fis = new FileInputStream(file);
+        Workbook workbook = new XSSFWorkbook(fis);
+
+        CellStyler styler = new CellStyler();
+        CellStyle style = styler.createWarningColor(workbook);
+
+        Sheet sheet = workbook.getSheetAt(0);
+        int rowNumber = 95;
+
+//        for (int i = lastRow(sheet) - 1; i >= rowNumber; i--) {
+//            sheet.removeRow(sheet.getRow(i));
+//        }
+
+        List<EntranceControlExportDto> controls = entranceControlRepository
+                .findAllByOrderByDateAsc()
+                .stream()
+                .map(EntranceControlMapper.INSTANCE::toDto).toList();
+
+        int counter = 1;
+
+        log.info(sheet.getSheetName());
+
+        workbook.setPrintArea(0, 0, 8, 0, 94 + controls.size());
+
+        for (EntranceControlExportDto control : controls) {
+            Row createRow = sheet.createRow(rowNumber);
+
+            Cell numberCell = createRow.createCell(0);
+            numberCell.setCellStyle(style);
+            CellUtil.createCell(createRow, 0, String.valueOf(counter));
+
+            Cell dateCell = createRow.createCell(1);
+            dateCell.setCellStyle(style);
+            CellUtil.createCell(createRow, 1, String.valueOf(control.getDate()));
+
+            Cell controlObjectCell = createRow.createCell(2);
+            controlObjectCell.setCellStyle(style);
+            String materials = control.getMaterials().split(" - ")[0];
+            CellUtil.createCell(createRow, 2, String.valueOf(materials));
+
+            Cell quantityCell = createRow.createCell(3);
+            quantityCell.setCellStyle(style);
+            String quantity = control.getMaterials().split(" - ")[1];
+            CellUtil.createCell(createRow, 3, String.valueOf(quantity));
+
+            Cell certificateCell = createRow.createCell(4);
+            certificateCell.setCellStyle(style);
+            CellUtil.createCell(createRow, 4, String.valueOf(control.getDocuments()));
+
+            Cell storageConditionsCell = createRow.createCell(5);
+            storageConditionsCell.setCellStyle(style);
+            CellUtil.createCell(createRow, 5, "Скл. хран.");
+
+            Cell firstEmptyCell = createRow.createCell(6);
+            firstEmptyCell.setCellStyle(style);
+            CellUtil.createCell(createRow, 6, "");
+
+            Cell secondEmptyCell = createRow.createCell(7);
+            secondEmptyCell.setCellStyle(style);
+            CellUtil.createCell(createRow, 7, "");
+
+            Cell suitableCell = createRow.createCell(8);
+            suitableCell.setCellStyle(style);
+            CellUtil.createCell(createRow, 8, "Годен");
+
+            counter++;
+            rowNumber++;
+        }
+
+        log.info("Последняя строка {}", lastRow(sheet));
+
+        workbook.write(new FileOutputStream(file));
         workbook.close();
         fis.close();
     }
@@ -196,5 +277,14 @@ public class ExcelServiceImplementation implements ExcelService {
         sheet.getRow(rowNumber).getCell(dayColumnNumber).setCellValue(day);
         sheet.getRow(rowNumber).getCell(monthColumnNumber).setCellValue(month);
         sheet.getRow(rowNumber).getCell(yearColumnNumber).setCellValue(year);
+    }
+
+    private int lastRow(Sheet sheet) {
+        int rowNumber = 95;
+
+        while (!Objects.equals(sheet.getRow(rowNumber), null)) {
+            rowNumber++;
+        }
+        return rowNumber;
     }
 }

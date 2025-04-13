@@ -31,6 +31,11 @@ public class WorkingServiceImplementation implements WorkingService {
         return workingRepository.findAllBySubObjectIdOrderByIdAsc(id);
     }
 
+    @Override
+    public List<Working> getAllByPositiveDone(long id) {
+        return workingRepository.findAllBySubObjectId(id);
+    }
+
     @Transactional
     @Override
     public Working create(WorkingRequestDto workingDto) {
@@ -41,7 +46,6 @@ public class WorkingServiceImplementation implements WorkingService {
     @Override
     public Working update(long id, WorkingUpdateDto dto) {
         Working updatedWorking = findWorkingOrNot(id);
-        log.info("Updating working with id: {}, name {}, standard {}", updatedWorking.getId(), updatedWorking.getName(), updatedWorking.getStandard().getName());
 
         if (dto.getName() != null) {
             updatedWorking.setName(dto.getName());
