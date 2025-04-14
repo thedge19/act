@@ -8,7 +8,10 @@ import java.io.IOException;
 import java.util.List;
 
 public interface PdfService {
-    void exportToPdf(int monthId)  throws IOException, DocumentException;
+    void exportToPdf(int monthId) throws IOException, DocumentException;
 
     void addTableData(PdfPTable table, List<Registry> registries) throws DocumentException, IOException;
+
+    int numberOfPages() throws IOException;
+
 }

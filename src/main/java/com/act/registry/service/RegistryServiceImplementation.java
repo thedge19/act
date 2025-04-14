@@ -7,6 +7,7 @@ import com.act.act.repository.EntranceControlRepository;
 import com.act.act.service.ActService;
 import com.act.exception.exception.InternalErrorException;
 import com.act.exception.exception.NotFoundException;
+import com.act.pdf.service.PdfService;
 import com.act.registry.dto.RegistryDto;
 import com.act.registry.dto.RegistryMapper;
 import com.act.registry.dto.RegistryResponseDto;
@@ -41,6 +42,7 @@ public class RegistryServiceImplementation implements RegistryService {
     private final RegistryRepository registryRepository;
     private final ActRepository actRepository;
     private final ActService actService;
+    private final PdfService pdfService;
     private final EntranceControlRepository entranceControlRepository;
     private final static String ENERGY = "ООО Энергомонтаж";
 
@@ -132,7 +134,8 @@ public class RegistryServiceImplementation implements RegistryService {
 
                 registryRepository.save(controlRegistry);
 
-                Registry certificateRegistry = getCertificateRegistry(dto, control, registryRepository.countByMonthId(dto.getMonthId()));
+                Registry certificateRegistry = getCertificateRegistry(dto, control, registryRepository
+                        .countByMonthId(dto.getMonthId()));
                 certificateRegistry.setCurrentActId(actRegistry.getId());
 
                 registryRepository.save(certificateRegistry);
@@ -142,21 +145,19 @@ public class RegistryServiceImplementation implements RegistryService {
 
     @Transactional
     @Override
-    public void update(List<RegistryUpdateRequestDto> dtos) {
-        for (RegistryUpdateRequestDto dto : dtos) {
-            Registry registry = findRegistryOrNot(dto.getId());
-            registry.setListInOrder(dto.getListInOrder());
-            registry.setRowNumber(dto.getRowNumber());
+    public void update(int monthId) throws IOException {
+        List<Registry> registries = registryRepository.findAllByOrderByAddingTimeAsc(monthId);
+
+        for (int i=0; i <registries.size(); i++) {
+            if (i == 0) {
+                int numberOfSheets = pdfService.numberOfPages() % 2 == 0 ? pdfService.numberOfPages() / 2 : pdfService.numberOfPages() / 2 + 1;
+                registries.get(i).setNumberOfSheets(numberOfSheets);
+                registries.get(i).setListInOrder(numberOfSheets);
+            } else {
+                registries.get(i).setListInOrder(registries.get(i-1).getListInOrder() + registries.get(i).getNumberOfSheets());
+            }
         }
     }
-
-    @Transactional
-    @Override
-    public void updateNumberOfPages(long id, int numberOfSheets) {
-        Registry registry = findRegistryOrNot(id);
-        registry.setNumberOfSheets(numberOfSheets);
-    }
-
 
     @Transactional
     @Override

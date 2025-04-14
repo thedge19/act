@@ -2,7 +2,6 @@ package com.act.registry.controller;
 
 import com.act.registry.dto.RegistryDto;
 import com.act.registry.dto.RegistryResponseDto;
-import com.act.registry.dto.RegistryUpdateRequestDto;
 import com.act.registry.service.RegistryService;
 import com.itextpdf.text.DocumentException;
 import lombok.RequiredArgsConstructor;
@@ -33,17 +32,17 @@ public class RegistryController {
         registryService.create(dto);
     }
 
-    @PatchMapping
-    public void update(@RequestBody List<RegistryUpdateRequestDto> dtos) {
-        registryService.update(dtos);
+    @PatchMapping("/{monthId}")
+    public void update(@PathVariable int monthId) throws IOException {
+        registryService.update(monthId);
     }
 
-    @PatchMapping("/{id}")
-    public void updateNumberOfPages(@PathVariable long id,
-                                    @RequestBody int numberOfSheets) {
-        log.info("Update number of sheets: {}", numberOfSheets);
-        registryService.updateNumberOfPages(id, numberOfSheets);
-    }
+//    @PatchMapping("/{id}")
+//    public void updateNumberOfPages(@PathVariable long id,
+//                                    @RequestBody int numberOfSheets) {
+//        log.info("Update number of sheets: {}", numberOfSheets);
+//        registryService.updateNumberOfPages(id, numberOfSheets);
+//    }
 
     @DeleteMapping("/{id}")
     public void delete(@PathVariable Long id) {

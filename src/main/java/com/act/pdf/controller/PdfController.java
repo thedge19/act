@@ -20,4 +20,9 @@ public class PdfController {
     public void toPdf(@PathVariable int monthId) throws DocumentException, IOException {
         pdfService.exportToPdf(monthId);
     }
+
+    @GetMapping
+    public void numberOfPages() throws IOException {
+        pdfService.numberOfPages();
+    }
 }

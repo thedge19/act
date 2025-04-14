@@ -5,6 +5,7 @@ import com.act.registry.repository.RegistryRepository;
 import com.itextpdf.text.*;
 import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfPTable;
+import com.itextpdf.text.pdf.PdfReader;
 import com.itextpdf.text.pdf.PdfWriter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,7 +48,13 @@ public class PdfServiceImplementation implements PdfService {
         addTableData(table, registries);
 
         document.add(table);
+
         document.close();
+
+
+        log.info("Export to PDF successful");
+
+//        log.info()
     }
 
     @Override
@@ -165,4 +172,12 @@ public class PdfServiceImplementation implements PdfService {
 
         return cell;
     }
+
+    public int numberOfPages() throws IOException {
+        PdfReader reader = new PdfReader("C:\\Users\\PC\\Desktop\\work\\pdfFile.pdf");
+        int pages = reader.getNumberOfPages();
+        reader.close();
+        return pages;
+    }
 }
+

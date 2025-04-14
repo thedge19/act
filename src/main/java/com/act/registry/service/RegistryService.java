@@ -15,9 +15,9 @@ public interface RegistryService {
 
     void create(RegistryDto dto);
 
-    void update(List<RegistryUpdateRequestDto> dtos);
+    void update(int monthId) throws IOException;
 
-    void updateNumberOfPages(long id, int numberOfSheets);
+//    void updateNumberOfPages(long id, int numberOfSheets);
 
     void delete(Long id);
 
