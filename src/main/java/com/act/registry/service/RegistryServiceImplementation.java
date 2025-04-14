@@ -11,7 +11,6 @@ import com.act.pdf.service.PdfService;
 import com.act.registry.dto.RegistryDto;
 import com.act.registry.dto.RegistryMapper;
 import com.act.registry.dto.RegistryResponseDto;
-import com.act.registry.dto.RegistryUpdateRequestDto;
 import com.act.registry.model.Registry;
 import com.act.registry.repository.RegistryRepository;
 import lombok.RequiredArgsConstructor;
