@@ -13,4 +13,11 @@ public interface RegistryRepository extends JpaRepository<Registry, Long> {
     List<Registry> findAllByOrderByAddingTimeAsc(int monthId);
 
     List<Registry> findAllByCurrentActId(Long id);
+
+    @Query("SELECT r FROM Registry r WHERE   r.monthId = :monthId AND r.documentName = :name")
+    Registry findByMonthId(Integer monthId, String name);
+
+//    @Query("SELECT r FROM Registry r WHERE r.monthId = :monthId " +
+//            "AND r.documentName = 'Общий журнал работ'")
+//    Registry findByDocumentName(Integer monthId, String name);
 }

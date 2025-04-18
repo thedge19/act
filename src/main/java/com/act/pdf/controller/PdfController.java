@@ -16,13 +16,40 @@ import java.io.IOException;
 public class PdfController {
     private final PdfService pdfService;
 
-    @GetMapping("/{monthId}")
-    public void toPdf(@PathVariable int monthId) throws DocumentException, IOException {
-        pdfService.exportToPdf(monthId);
+//    @GetMapping("/{monthId}")
+//    public void toPdf(@PathVariable int monthId) throws DocumentException, IOException {
+//        pdfService.exportRegistryToPdf(monthId, path);
+//    }
+
+//    @GetMapping
+//    public void numberOfPages() throws IOException {
+//        pdfService.numberOfPages();
+//    }
+
+    @GetMapping("/workLog3")
+    public void toPdf3() throws DocumentException, IOException {
+        pdfService.exportWorkLog3ToPdf();
     }
 
-    @GetMapping
-    public void numberOfPages() throws IOException {
-        pdfService.numberOfPages();
+    @GetMapping("/workLog6")
+    public void toPdf6() throws DocumentException, IOException {
+        pdfService.exportWorkLog6ToPdf();
     }
+
+    @GetMapping("/workLog/{doc}")
+    public void createWorkLog(@PathVariable int doc) throws DocumentException, IOException {
+        pdfService.mergeUsingIText(doc);
+    }
+
+    @GetMapping("/entranceControlLog")
+    public void createEntranceControlLog() throws DocumentException, IOException {
+        pdfService.exportEntranceControlLogToPdf();
+    }
+
+//    @PostMapping("/excel")
+//    public void writePdfAOSR(
+//            @RequestBody SelectedPeriod selectedPeriod) throws IOException {
+//        pdfService.writeExcel(selectedPeriod);
+//    }
+
 }
