@@ -38,7 +38,7 @@ public class ActServiceImplementation implements ActService {
     private final MaterialRepository materialRepository;
     private final static String CONTROL_ACT = "Акт результатов входного контроля МТР и оборудования №";
     private final static String EXECUTIVE_SCHEMA = "Исполнительная схема №";
-    private final static String SETS_OF_RULES = " СП 48.13330.2019 «Организация строительства»; СП 49.13330.2010\n" +
+    private final static String SETS_OF_RULES = " СП 48.13330.2019 «Организация строительства»; СП 49.13330.2010" +
             "«Безопасность труда в строительстве» ";
 
     @Override

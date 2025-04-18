@@ -41,7 +41,6 @@ public class RegistryServiceImplementation implements RegistryService {
     private final RegistryRepository registryRepository;
     private final ActRepository actRepository;
     private final ActService actService;
-    private final PdfService pdfService;
     private final EntranceControlRepository entranceControlRepository;
     private final static String ENERGY = "ООО Энергомонтаж";
 
@@ -149,9 +148,7 @@ public class RegistryServiceImplementation implements RegistryService {
 
         for (int i=0; i <registries.size(); i++) {
             if (i == 0) {
-                int numberOfSheets = pdfService.numberOfPages() % 2 == 0 ? pdfService.numberOfPages() / 2 : pdfService.numberOfPages() / 2 + 1;
-                registries.get(i).setNumberOfSheets(numberOfSheets);
-                registries.get(i).setListInOrder(numberOfSheets);
+                registries.get(0).setListInOrder(registries.get(0).getNumberOfSheets());
             } else {
                 registries.get(i).setListInOrder(registries.get(i-1).getListInOrder() + registries.get(i).getNumberOfSheets());
             }
@@ -162,7 +159,9 @@ public class RegistryServiceImplementation implements RegistryService {
     @Override
     public void delete(Long id) {
         Registry deletedRegistry = findRegistryOrNot(id);
-        if (!deletedRegistry.getDocumentName().startsWith("Реестр")) {
+        if (!deletedRegistry.getDocumentName().startsWith("Реестр")
+                && !deletedRegistry.getDocumentName().startsWith("Общий")
+                && !deletedRegistry.getDocumentName().startsWith("Журнал")) {
             Act act = actRepository.findByActNumber(deletedRegistry.getDocumentNumber().split(" ")[0]);
             act.setInRegistry(null);
             List<Registry> deletedRegistries = registryRepository.findAllByCurrentActId(id);

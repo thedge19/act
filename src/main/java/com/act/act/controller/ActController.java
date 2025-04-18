@@ -6,6 +6,8 @@ import com.act.act.model.EntranceControl;
 import com.act.act.model.SelectedPeriod;
 import com.act.act.service.ActService;
 import com.act.excel.service.ExcelService;
+import com.act.pdf.service.PdfService;
+import com.itextpdf.text.DocumentException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
@@ -22,6 +24,7 @@ public class ActController {
 
     private final ActService actService;
     private final ExcelService excelService;
+    private final PdfService pdfService;
 
     @GetMapping("/{id}")
     public ActResponseDto get(@PathVariable Long id) {
@@ -102,8 +105,8 @@ public class ActController {
 
     @PostMapping("/excel")
     public void writeExcelFile(
-            @RequestBody SelectedPeriod selectedPeriod) throws IOException {
-        excelService.writeExcel(selectedPeriod);
+            @RequestBody SelectedPeriod selectedPeriod) throws IOException, DocumentException {
+        pdfService.exportAOSRtoPdf(selectedPeriod);
     }
 
     @GetMapping("/excelControl")
