@@ -7,7 +7,6 @@ import com.act.act.repository.EntranceControlRepository;
 import com.act.act.service.ActService;
 import com.act.exception.exception.InternalErrorException;
 import com.act.exception.exception.NotFoundException;
-import com.act.pdf.service.PdfService;
 import com.act.registry.dto.RegistryDto;
 import com.act.registry.dto.RegistryMapper;
 import com.act.registry.dto.RegistryResponseDto;

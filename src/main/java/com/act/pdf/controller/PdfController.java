@@ -1,6 +1,5 @@
 package com.act.pdf.controller;
 
-import com.act.act.model.SelectedPeriod;
 import com.act.pdf.service.PdfService;
 import com.itextpdf.text.DocumentException;
 import lombok.RequiredArgsConstructor;
