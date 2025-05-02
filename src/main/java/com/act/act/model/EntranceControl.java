@@ -1,5 +1,6 @@
 package com.act.act.model;
 
+import com.act.material.model.Material;
 import com.act.project.model.Project;
 import jakarta.persistence.*;
 import lombok.*;
@@ -50,4 +51,8 @@ public class EntranceControl {
 
     @Column(name = "control_sheet_numbers")
     private Integer controlSheetNumbers;
+
+    @JoinColumn(name = "material_id")
+    @OneToOne(cascade = CascadeType.ALL)
+    private Material material;
 }

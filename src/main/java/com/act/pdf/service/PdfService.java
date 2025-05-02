@@ -2,8 +2,10 @@ package com.act.pdf.service;
 
 import com.act.act.model.SelectedPeriod;
 import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.pdf.PdfReader;
 
 import java.io.IOException;
+import java.util.List;
 
 public interface PdfService {
     void exportRegistryToPdf(int monthId, String path) throws IOException, DocumentException;
@@ -18,5 +20,5 @@ public interface PdfService {
 
     void exportAOSRtoPdf(SelectedPeriod selectedPeriod) throws IOException, DocumentException;
 
-    void mergeUsingIText(int doc) throws IOException, DocumentException;
+    void mergeUsingIText(List<PdfReader> pdfReaders, String path) throws IOException, DocumentException;
 }

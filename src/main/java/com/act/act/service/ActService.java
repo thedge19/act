@@ -3,6 +3,7 @@ package com.act.act.service;
 import com.act.act.dto.*;
 import com.act.act.model.Act;
 import com.act.act.model.EntranceControl;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -16,7 +17,7 @@ public interface ActService {
 
     List<ActResponseDto> findAllByEndDateBetween(LocalDate startDate, LocalDate endDate);
 
-    List<EntranceControl> getAllEntranceControl();
+    List<EntranceControlResponseDto> getAllEntranceControl();
 
     Act create(ActRequestDto requestDto);
 
@@ -40,4 +41,5 @@ public interface ActService {
 
     List<ActResponseDto> getAllWithNullInRegistries();
 
+    void addSchema(MultipartFile file, Long id);
 }

@@ -27,4 +27,6 @@ public class ActResponseDto {
     private String nextWorks;
 
     private String inRegistry;
+
+    private Long executiveSchemaId;
 }

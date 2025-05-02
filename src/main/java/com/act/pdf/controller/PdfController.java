@@ -21,11 +21,6 @@ public class PdfController {
 //        pdfService.exportRegistryToPdf(monthId, path);
 //    }
 
-//    @GetMapping
-//    public void numberOfPages() throws IOException {
-//        pdfService.numberOfPages();
-//    }
-
     @GetMapping("/workLog3")
     public void toPdf3() throws DocumentException, IOException {
         pdfService.exportWorkLog3ToPdf();
@@ -36,10 +31,10 @@ public class PdfController {
         pdfService.exportWorkLog6ToPdf();
     }
 
-    @GetMapping("/workLog/{doc}")
-    public void createWorkLog(@PathVariable int doc) throws DocumentException, IOException {
-        pdfService.mergeUsingIText(doc);
-    }
+//    @GetMapping("/workLog/{doc}")
+//    public void createWorkLog(@PathVariable int doc) throws DocumentException, IOException {
+//        pdfService.mergeUsingIText(doc);
+//    }
 
     @GetMapping("/entranceControlLog")
     public void createEntranceControlLog() throws DocumentException, IOException {

@@ -41,4 +41,8 @@ public class Material {
 
     @Column(name = "material_standard")
     private String standard;
+
+    @OneToOne
+    @JoinColumn(name = "certificate_id")
+    private Certificate certificate;
 }

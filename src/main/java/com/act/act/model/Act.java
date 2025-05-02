@@ -70,6 +70,10 @@ public class Act {
     @Column(name = "in_registry")
     private String inRegistry;
 
+    @OneToOne
+    @JoinColumn(name="executive_schema_id")
+    private ExecutiveSchema executiveSchema;
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

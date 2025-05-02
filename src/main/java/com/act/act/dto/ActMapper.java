@@ -18,8 +18,11 @@ public interface ActMapper {
     @Mapping(target="inAccordWith", source = "inAccordWith")
     @Mapping(target="nextWorks", source = "nextWorks")
     @Mapping(target="inRegistry", source = "inRegistry")
+    @Mapping(target="executiveSchemaId", source = "executiveSchema.id")
     ActResponseDto toDto(Act act);
 
+    @Mapping(target="actNumber", source = "actNumber")
+    @Mapping(target="executiveSchemaId", source = "executiveSchema.id")
     ActUpdateResponseDto toUpdateDto(Act act);
 
     @Mapping(target="actNumber", source = "actNumber")
