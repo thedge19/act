@@ -1,9 +1,13 @@
 package com.act.pdf.service;
 
 import com.act.act.dto.*;
+import com.act.act.model.Act;
+import com.act.act.model.EntranceControl;
+import com.act.act.model.ExecutiveSchema;
 import com.act.act.model.SelectedPeriod;
 import com.act.act.repository.ActRepository;
 import com.act.act.repository.EntranceControlRepository;
+import com.act.act.repository.ExecutiveSchemaRepository;
 import com.act.act.service.ActService;
 import com.act.registry.model.Registry;
 import com.act.registry.repository.RegistryRepository;
@@ -15,6 +19,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.awt.image.ImagingOpException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -22,6 +27,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +51,7 @@ public class PdfServiceImplementation implements PdfService {
     private final Font f9 = FontFactory.getFont(FONT, "cp1251", true, 14);
     private final Font f10 = FontFactory.getFont(FONT, "cp1251", true, 9);
     private final Font fontToFillIn = FontFactory.getFont(FONT, "cp1251", true, 9, Font.BOLDITALIC);
+    private final Font fontToFillInControl = FontFactory.getFont(FONT, "cp1251", true, 11, Font.BOLDITALIC);
     private final Font subscript = FontFactory.getFont(FONT, "cp1251", true, 6);
     private final Font f13 = FontFactory.getFont(FONT, "cp1251", true, 11, Font.BOLD);
     private final Font f14 = FontFactory.getFont(FONT, "cp1251", true, 10, Font.BOLD);
@@ -53,6 +60,7 @@ public class PdfServiceImplementation implements PdfService {
     private final ActRepository actRepository;
     private final WorkLogService workLogService;
     private final EntranceControlRepository entranceControlRepository;
+    private final ExecutiveSchemaRepository executiveSchemaRepository;
     private final PdfCellStyler cellStyler = new PdfCellStyler();
     public static final String REGISTRY_PATH = "C:\\Users\\PC\\Desktop\\work\\registry.pdf";
     public static final String REGISTRY_TEMP_PATH = "C:\\Users\\PC\\Desktop\\work\\temp_registry.pdf";
@@ -62,6 +70,7 @@ public class PdfServiceImplementation implements PdfService {
     public static final String WORK_LOG_6_PATH = "C:\\Users\\PC\\Desktop\\work\\workLog6.pdf";
     public static final String ENTRANCE_CONTROL_PATH = "C:\\Users\\PC\\Desktop\\work\\entranceControlLog.pdf";
     public static final String ACTS_FOLDER = "C:\\Users\\PC\\Desktop\\work\\acts\\";
+    public static final String MERGED_ACTS_FOLDER = "C:\\Users\\PC\\Desktop\\work\\merged\\";
 
     @Override
     public void exportRegistryToPdf(int monthId, String path) throws IOException, DocumentException {
@@ -250,14 +259,18 @@ public class PdfServiceImplementation implements PdfService {
         LocalDate startDate = jsDateToLocalDate(selectedPeriod.getStartDate());
         LocalDate endDate = jsDateToLocalDate(selectedPeriod.getEndDate());
 
+
         List<ActResponseDto> acts = actService.findAllByEndDateBetween(startDate, endDate);
 
         for (ActResponseDto act : acts) {
             Document document = new Document();
+            List<PdfReader> pdfReaders = new ArrayList<>();
             String actNumber = act.getActNumber().replace("/", "_");
             String localPath = ACTS_FOLDER + actNumber + ".pdf";
             PdfWriter.getInstance(document, new FileOutputStream(localPath));
             document.open();
+
+            String currentPath = MERGED_ACTS_FOLDER + actNumber + ".pdf";
 
             PdfPTable table = new PdfPTable(36);
 
@@ -276,6 +289,49 @@ public class PdfServiceImplementation implements PdfService {
 
             document.close();
             log.info("Акт {} создан", act.getActNumber());
+
+            pdfReaders.add(new PdfReader(localPath));
+
+            ExecutiveSchema schema = executiveSchemaRepository.findById(act.getExecutiveSchemaId()).orElse(null);
+
+            assert schema != null;
+            pdfReaders.add(new PdfReader(schema.getSchemaPath()));
+
+            if (!act.getMaterials().isEmpty()) {
+                Act currentAct = actService.findActOrNot(act.getId());
+                List<EntranceControl> controls = actService.controls(currentAct);
+
+                for (EntranceControl control : controls) {
+                    Document controlDocument = new Document();
+
+                    String controlNumber = control.getControlNumber().replace("/", "_");
+                    String controlLocalPath = ACTS_FOLDER + "EC" + controlNumber + ".pdf";
+
+                    PdfWriter.getInstance(controlDocument, new FileOutputStream(controlLocalPath));
+                    controlDocument.open();
+
+                    PdfPTable controlTable = new PdfPTable(9);
+                    controlTable.setWidthPercentage(105);
+
+                    controlTable.setTotalWidth(500f);
+                    float[] controlWidths = new float[]{48.76f, 89.25f, 48.76f, 60.33f, 57.03f, 48.76f, 42.17f, 71.90f, 33.03f};
+                    controlTable.setWidths(controlWidths);
+
+                    addControlTableData(controlTable, control, act);
+                    controlDocument.add(controlTable);
+
+                    controlDocument.close();
+                    log.info("Акт входного конроля {} создан", control.getControlNumber());
+
+                    pdfReaders.add(new PdfReader(controlLocalPath));
+
+                    String certificatePath = control.getMaterial().getCertificate().getPath();
+
+                    pdfReaders.add(new PdfReader(certificatePath));
+                }
+            }
+
+            mergeUsingIText(pdfReaders, currentPath);
         }
     }
 
@@ -457,14 +513,14 @@ public class PdfServiceImplementation implements PdfService {
 
         addThirdStaticBlock(table);
 
-        addLongString(act.getWorks(), table);
+        addLongString(act.getWorks(), table, fontToFillIn, 36);
         table.addCell(createCell("(наименование скрытых работ)",
                 "centerTopNoBorder", subscript, 36, 1, 0.0F));
 
         table.addCell(createCell("2. Работы выполнены по проектной документации", "leftCenterNoBorder", f5, 36, 1, 20F));
         table.addCell(createCell(act.getProjectName(), "centerBorderBottom", fontToFillIn, 36, 1, 0.0F));
         table.addCell(createCell("(номер, другие реквизиты чертежа, наименование проектной и/или рабочей документации, " +
-                 "сведения о лицах, осуществляющих подготовку раздела проектной и/или рабочей документации)",
+                        "сведения о лицах, осуществляющих подготовку раздела проектной и/или рабочей документации)",
                 "centerTopNoBorder", subscript, 36, 1, 0.0F));
 
         table.addCell(createCell("3. При выполнении работ применены", "leftCenterNoBorder", f5, 15, 1, 0.0F));
@@ -472,9 +528,9 @@ public class PdfServiceImplementation implements PdfService {
 
         table.addCell(createCell("4. Предъявлены документы, подтверждающие соответствие работ предъявляемым к ним  требованиям",
                 "leftCenterNoBorder", f5, 36, 1, 0.0F));
-        addLongString(act.getSubmittedDocuments(), table);
+        addLongString(act.getSubmittedDocuments(), table, fontToFillIn, 36);
         table.addCell(createCell("(исполнительные схемы и чертежи, результаты экспертиз, обследований, лабораторных " +
-                "и иных испытаний выполненных работ, проведенных в процессе строительного контроля)",
+                        "и иных испытаний выполненных работ, проведенных в процессе строительного контроля)",
                 "centerTopNoBorder", subscript, 36, 1, 0.0F));
 
         table.addCell(createCell("5. Даты:", "leftBottomNoBorder", f5, 3, 1, 20F));
@@ -501,13 +557,13 @@ public class PdfServiceImplementation implements PdfService {
         table.addCell(createCell("г.", "leftBottomNoBorder", f5, 13, 1, 0.0F));
 
         table.addCell(createCell("6. Работы выполнены в соответствии с", "leftCenterNoBorder", f5, 36, 1, 0.0F));
-        addLongString(act.getInAccordWith(), table);
+        addLongString(act.getInAccordWith(), table, fontToFillIn, 36);
         table.addCell(createCell("(наименования и структурные единицы технических регламентов, иных нормативных " +
-                "правовых актов, разделы проектной и (или) рабочей документации)",
+                        "правовых актов, разделы проектной и (или) рабочей документации)",
                 "centerTopNoBorder", subscript, 36, 1, 0.0F));
 
         table.addCell(createCell("7. Разрешается  производство   последующих  работ", "leftCenterNoBorder", f5, 36, 1, 0.0F));
-        addLongString(act.getNextWorks(), table);
+        addLongString(act.getNextWorks(), table, fontToFillIn, 36);
         table.addCell(createCell("(наименование работ, строительных конструкций, участков сетей инженерно-технического обеспечения)",
                 "centerTopNoBorder", subscript, 36, 1, 0.0F));
 
@@ -518,7 +574,7 @@ public class PdfServiceImplementation implements PdfService {
         table.addCell(createCell("экземплярах (в случае заполнения акта на бумажном носителе).", "leftCenterNoBorder", f5, 27, 1, 0.0F));
 
         table.addCell(createCell("Приложения:", "leftCenterNoBorder", f5, 36, 1, 0.0F));
-        addLongString(act.getSubmittedDocuments(), table);
+        addLongString(act.getSubmittedDocuments(), table, fontToFillIn, 36);
 
         addForthStaticBlock(table);
     }
@@ -655,12 +711,12 @@ public class PdfServiceImplementation implements PdfService {
         table.addCell(createCell("1. К освидетельствованию предъявлены следующие работы:", "leftTopNoBorder", f5, 36, 1, 0.0F));
     }
 
-    private void  addForthStaticBlock(PdfPTable table) {
+    private void addForthStaticBlock(PdfPTable table) {
         table.addCell(createCell("(исполнительные схемы и чертежи, результаты экспертиз, обследований, лабораторных и иных испытаний)",
                 "centerTopNoBorder", subscript, 36, 1, 0.0F));
 
         table.addCell(createCell("Представитель застройщика, технического заказчика, лица, ответственного за " +
-                "эксплуатацию здания, сооружения, или регионального оператора по вопросам строительного контроля", "leftCenterNoBorder",
+                        "эксплуатацию здания, сооружения, или регионального оператора по вопросам строительного контроля", "leftCenterNoBorder",
                 f5, 36, 1, 0.0F));
         table.addCell(createCell("Челебиев А.А.", "centerBottomBorderBottom", fontToFillIn, 15, 1, 0.0F));
         addSubscripts(table);
@@ -676,8 +732,8 @@ public class PdfServiceImplementation implements PdfService {
         addSubscripts(table);
 
         table.addCell(createCell("Представитель лица, осуществляющего подготовку проектной документации (в случае привлечения " +
-                "застройщиком лица, осуществляющего подготовку проектной документации, для проверки соответствия " +
-                "выполняемых работ проектной документации  согласно части 2 статьи 53 Градостроительного кодекса Российской Федерации)",
+                        "застройщиком лица, осуществляющего подготовку проектной документации, для проверки соответствия " +
+                        "выполняемых работ проектной документации  согласно части 2 статьи 53 Градостроительного кодекса Российской Федерации)",
                 "leftCenterNoBorder", f5, 36, 1, 0.0F));
         table.addCell(createCell("н/п", "centerBottomBorderBottom", fontToFillIn, 15, 1, 0.0F));
         addSubscripts(table);
@@ -695,6 +751,130 @@ public class PdfServiceImplementation implements PdfService {
         table.addCell(createCell("(фамилия, инициалы)", "centerTopNoBorder", subscript, 15, 1, 0.0F));
         table.addCell(createCell("", "centerTopNoBorder", subscript, 12, 1, 0.0F));
         table.addCell(createCell("(подпись)", "centerTopNoBorder", subscript, 9, 1, 0.0F));
+    }
+
+    // entrance control acts
+
+    private void addControlTableData(PdfPTable controlTable, EntranceControl control, ActResponseDto act) {
+        String controlDate = control.getDate().toString();
+        String[] controlDateList = controlDate.split("-");
+        controlDate = controlDateList[2] + " " + getMonth(controlDateList[1]) + " " + controlDateList[0] + " г.";
+
+        controlTable.addCell(createCell("ООО «ЭНЕРГОМОНТАЖ»", "centerBorderBottom", fontToFillInControl, 9, 1, 0.0F));
+        controlTable.addCell(createCell("(наименование строительной организации)", "centerTopNoBorder", subscript, 9, 1, 0.0F));
+        controlTable.addCell(createCell(clearProjectNameForControls(act.getProjectName(), 1), "centerBorderBottom", fontToFillInControl, 9, 1, 0.0F));
+        controlTable.addCell(createCell("(наименование объекта)", "centerTopNoBorder", subscript, 9, 1, 0.0F));
+        controlTable.addCell(createCell("АКТ №", "rightBottomNoBorder", f1, 4, 1, 30F));
+        controlTable.addCell(createCell(act.getActNumber(), "centerBottomBorderBottom", fontToFillInControl, 2, 1, 30F));
+        controlTable.addCell(createCell("", "centerNoBorder", fontToFillInControl, 3, 1, 30F));
+        controlTable.addCell(createCell("результатов входного контроля МТР и оборудования", "centerBottomNoBorder", f1, 9, 1, 30F));
+        addLongString(control.getMaterials(), controlTable, fontToFillInControl, 9);
+        controlTable.addCell(createCell("((наименование МТР)", "centerTopNoBorder", subscript, 9, 1, 0.0F));
+        controlTable.addCell(createCell("от", "rightBottomNoBorder", f1, 4, 1, 0.0F));
+        controlTable.addCell(createCell(controlDate, "centerBottomBorderBottom", fontToFillInControl, 2, 1, 0.0F));
+        controlTable.addCell(createCell("", "centerNoBorder", fontToFillInControl, 3, 1, 0.0F));
+        controlTable.addCell(createCell("Составлен представителями:", "leftCenterNoBorder", f1, 9, 1, 0.0F));
+        controlTable.addCell(createCell("субподрядной организации", "leftCenterNoBorder", f1, 2, 1, 0.0F));
+        controlTable.addCell(createCell("Руководитель работ ООО «ЭНЕРГОМОНТАЖ» А.Е. Трифонов", "centerBorderBottom", fontToFillInControl, 7, 1, 0.0F));
+        controlTable.addCell(createCell("", "centerNoBorder", fontToFillInControl, 2, 1, 0.0F));
+        controlTable.addCell(createCell("(должность, организация, ФИО)", "centerTopNoBorder", subscript, 7, 1, 0.0F));
+        controlTable.addCell(createCell("строительного контроля подрядчика", "leftCenterNoBorder", f1, 3, 1, 0.0F));
+        controlTable.addCell(createCell("Начальник отдела контроля качества", "centerBorderBottom", fontToFillInControl, 6, 1, 0.0F));
+        controlTable.addCell(createCell("", "centerNoBorder", fontToFillInControl, 3, 1, 0.0F));
+        controlTable.addCell(createCell("(должность, организация, ФИО)", "centerTopNoBorder", subscript, 6, 1, 0.0F));
+        controlTable.addCell(createCell("ООО «ЭНЕРГОМОНТАЖ» Попова Л.С.", "centerBorderBottom", fontToFillInControl, 9, 1, 0.0F));
+        controlTable.addCell(createCell("строительного контроля застройщика или технического заказчика", "leftCenterNoBorder", f1, 9, 1, 0.0F));
+        controlTable.addCell(createCell("н/п", "centerBorderBottom", fontToFillInControl, 9, 1, 0.0F));
+        controlTable.addCell(createCell("(должность, организация, ФИО)", "centerTopNoBorder", subscript, 9, 1, 0.0F));
+        controlTable.addCell(createCell("застройщика ", "leftCenterNoBorder", f1, 9, 1, 0.0F));
+        controlTable.addCell(createCell("или технического заказчика ", "leftCenterNoBorder", f1, 2, 1, 0.0F));
+        controlTable.addCell(createCell("Ведущий инженер ОКС ПК «Шесхарис» А.А. Челебиев", "centerBorderBottom", fontToFillInControl, 7, 1, 0.0F));
+        controlTable.addCell(createCell("", "leftCenterNoBorder", f1, 2, 1, 0.0F));
+        controlTable.addCell(createCell("(должность, организация, ФИО)", "centerTopNoBorder", subscript, 7, 1, 0.0F));
+        controlTable.addCell(createCell("в том, что произведен", "leftCenterNoBorder", f1, 2, 1, 0.0F));
+        controlTable.addCell(createCell("выборочный", "centerBorderBottom", fontToFillInControl, 2, 1, 0.0F));
+        controlTable.addCell(createCell("осмотр МТР и оборудования", "leftCenterNoBorder", f1, 5, 1, 0.0F));
+        controlTable.addCell(createCell("", "leftCenterNoBorder", f1, 2, 1, 0.0F));
+        controlTable.addCell(createCell("(сплошной, выборочный)", "centerTopNoBorder", subscript, 2, 1, 0.0F));
+        controlTable.addCell(createCell("", "leftCenterNoBorder", f1, 5, 1, 0.0F));
+        addLongString(control.getMaterials(), controlTable, fontToFillInControl, 9);
+        controlTable.addCell(createCell("(наименование)", "centerTopNoBorder", subscript, 9, 1, 0.0F));
+        controlTable.addCell(createCell("предназначенных проектной документацией", "leftCenterNoBorder", f1, 4, 1, 0.0F));
+        controlTable.addCell(createCell(clearProjectNameForControls(act.getProjectName(), 2), "centerBorderBottom", fontToFillInControl, 5, 1, 0.0F));
+        controlTable.addCell(createCell("", "leftCenterNoBorder", f1, 4, 1, 0.0F));
+        controlTable.addCell(createCell("(шифр, раздел, номер изменения проектной документации)", "centerTopNoBorder", subscript, 5, 1, 0.0F));
+        controlTable.addCell(createCell("для строительства на участке", "leftCenterNoBorder", f1, 9, 1, 0.0F));
+        addLongString(control.getSubObjectName(), controlTable, fontToFillInControl, 9);
+        controlTable.addCell(createCell("(участок линейной части (км/ПК), подобъект НПС/ЛПДС)", "centerTopNoBorder", subscript, 9, 1, 0.0F));
+        controlTable.addCell(createCell("1. Осмотром геометрических размеров, маркировки МТР и оборудования", "leftCenterNoBorder", f1, 9, 1, 0.0F));
+        addLongString(control.getMaterials(), controlTable, fontToFillInControl, 9);
+        controlTable.addCell(createCell("(наименование, заводской номер)", "centerTopNoBorder", subscript, 9, 1, 0.0F));
+        controlTable.addCell(createCell("сопроводительной документации", "leftCenterNoBorder", f1, 9, 1, 0.0F));
+        addLongString(control.getDocuments(), controlTable, fontToFillInControl, 9);
+        controlTable.addCell(createCell("(паспорта, сертификаты)", "centerTopNoBorder", subscript, 9, 1, 0.0F));
+        controlTable.addCell(createCell("установлено, что данный МТР и оборудование по своим техническим параметрам", "leftCenterNoBorder", f1, 9, 1, 0.0F));
+        controlTable.addCell(createCell("Внешний вид, количество", "centerBorderBottom", fontToFillInControl, 9, 1, 0.0F));
+        controlTable.addCell(createCell("(контролируемые параметры)", "centerTopNoBorder", subscript, 9, 1, 0.0F));
+        controlTable.addCell(createCell("номеру технических условий", "leftCenterNoBorder", f1, 3, 1, 0.0F));
+        controlTable.addCell(createCell(control.getStandard(), "centerBorderBottom", fontToFillInControl, 6, 1, 0.0F));
+        controlTable.addCell(createCell("", "leftCenterNoBorder", f1, 3, 1, 0.0F));
+        controlTable.addCell(createCell("(контролируемые параметры)", "centerTopNoBorder", subscript, 6, 1, 0.0F));
+        controlTable.addCell(createCell("техническим характеристикам", "leftCenterNoBorder", f1, 3, 1, 0.0F));
+        controlTable.addCell(createCell("по данным сопроводительной документации", "centerBorderBottom", fontToFillInControl, 6, 1, 0.0F));
+        controlTable.addCell(createCell("", "leftCenterNoBorder", f1, 3, 1, 0.0F));
+        controlTable.addCell(createCell("(по данным сопроводительной документации, результатам испытаний)", "centerTopNoBorder", subscript, 6, 1, 0.0F));
+        controlTable.addCell(createCell("соответствует", "centerBorderBottom", fontToFillInControl, 6, 1, 0.0F));
+        controlTable.addCell(createCell("проектной документации.", "leftCenterNoBorder", f1, 3, 1, 0.0F));
+        controlTable.addCell(createCell("(соответствует/не соответствует)", "centerTopNoBorder", subscript, 6, 1, 0.0F));
+        controlTable.addCell(createCell("", "leftCenterNoBorder", f1, 3, 1, 0.0F));
+        controlTable.addCell(createCell("2. Сопроводительная документация на МТР и оборудование", "leftCenterNoBorder", f1, 9, 1, 0.0F));
+        addLongString(control.getDocuments(), controlTable, fontToFillInControl, 9);
+        controlTable.addCell(createCell("(паспорта, сертификаты)", "centerTopNoBorder", subscript, 9, 1, 0.0F));
+        controlTable.addCell(createCell("имеется в полном комплекте.", "leftCenterNoBorder", f1, 9, 1, 0.0F));
+        controlTable.addCell(createCell("3. МТР и оборудование", "leftCenterNoBorder", f1, 2, 1, 0.0F));
+        controlTable.addCell(createCell("не находится", "centerBorderBottom", fontToFillInControl, 2, 1, 0.0F));
+        controlTable.addCell(createCell("в Перечне основных видов МТР и оборудования.", "leftCenterNoBorder", f1, 5, 1, 0.0F));
+        controlTable.addCell(createCell("", "leftCenterNoBorder", f1, 2, 1, 0.0F));
+        controlTable.addCell(createCell("(находится/не находится)", "centerTopNoBorder", subscript, 2, 1, 0.0F));
+        controlTable.addCell(createCell("", "leftCenterNoBorder", f1, 5, 1, 0.0F));
+        controlTable.addCell(createCell("4. Техническая документация на МТР и оборудование ", "leftCenterNoBorder", f1, 5, 1, 0.0F));
+        controlTable.addCell(createCell("отсутствует в Реестре", "centerBorderBottom", fontToFillInControl, 4, 1, 0.0F));
+        controlTable.addCell(createCell("", "leftCenterNoBorder", f1, 5, 1, 0.0F));
+        controlTable.addCell(createCell("(номер учетной записи в Реестре/отсутствует в Реестре)", "centerTopNoBorder", subscript, 4, 1, 0.0F));
+        controlTable.addCell(createCell("5. Дополнительно отмечено следующее", "leftCenterNoBorder", f1, 4, 1, 0.0F));
+        controlTable.addCell(createCell("н/п", "centerBorderBottom", fontToFillInControl, 5, 1, 0.0F));
+        controlTable.addCell(createCell("", "leftCenterNoBorder", f1, 4, 1, 0.0F));
+        controlTable.addCell(createCell("(заполняется при необходимости)", "centerTopNoBorder", subscript, 5, 1, 0.0F));
+        controlTable.addCell(createCell("Представитель субподрядной", "leftBottomNoBorder", f1, 9, 1, 30F));
+        controlTable.addCell(createCell("строительной организации", "leftCenterNoBorder", f1, 9, 1, 0.0F));
+        controlTable.addCell(createCell("ООО «ЭНЕРГОМОНТАЖ» А.Е. Трифонов", "centerBorderBottom", fontToFillInControl, 4, 1, 0.0F));
+        addControlSigns(controlTable);
+        controlTable.addCell(createCell("Представитель службы", "leftCenterNoBorder", f1, 9, 1, 0.0F));
+        controlTable.addCell(createCell("строительного контроля", "leftCenterNoBorder", f1, 9, 1, 0.0F));
+        controlTable.addCell(createCell("подрядчика", "leftCenterNoBorder", f1, 9, 1, 0.0F));
+        controlTable.addCell(createCell("ООО «ЭНЕРГОМОНТАЖ» Л.С. Попова", "centerBorderBottom", fontToFillInControl, 4, 1, 0.0F));
+        addControlSigns(controlTable);
+        controlTable.addCell(createCell("Представитель службы", "leftCenterNoBorder", f1, 9, 1, 0.0F));
+        controlTable.addCell(createCell("строительного контроля", "leftCenterNoBorder", f1, 9, 1, 0.0F));
+        controlTable.addCell(createCell("застройщика или", "leftCenterNoBorder", f1, 9, 1, 0.0F));
+        controlTable.addCell(createCell("технического заказчика", "leftCenterNoBorder", f1, 9, 1, 0.0F));
+        controlTable.addCell(createCell("", "centerBorderBottom", fontToFillInControl, 4, 1, 0.0F));
+        addControlSigns(controlTable);
+        controlTable.addCell(createCell("Представитель застройщика", "leftCenterNoBorder", f1, 9, 1, 0.0F));
+        controlTable.addCell(createCell("или технического заказчика", "leftCenterNoBorder", f1, 9, 1, 0.0F));
+        controlTable.addCell(createCell("ПК «Шесхарис» А.А. Челебиев", "centerBorderBottom", fontToFillInControl, 4, 1, 0.0F));
+        addControlSigns(controlTable);
+    }
+
+    void addControlSigns(PdfPTable controlTable) {
+        controlTable.addCell(createCell("", "leftCenterNoBorder", f1, 1, 1, 0.0F));
+        controlTable.addCell(createCell("", "centerBorderBottom", fontToFillInControl, 3, 1, 0.0F));
+        controlTable.addCell(createCell("М.П.", "leftCenterNoBorder", f1, 1, 1, 0.0F));
+        controlTable.addCell(createCell("(организация, ФИО)", "centerTopNoBorder", subscript, 4, 1, 0.0F));
+        controlTable.addCell(createCell("", "centerTopNoBorder", subscript, 1, 1, 0.0F));
+        controlTable.addCell(createCell("(подпись)", "centerTopNoBorder", subscript, 2, 1, 0.0F));
+        controlTable.addCell(createCell("(дата)", "centerTopNoBorder", subscript, 1, 1, 0.0F));
+        controlTable.addCell(createCell("", "centerTopNoBorder", subscript, 1, 1, 0.0F));
     }
 
     // utils
@@ -756,27 +936,18 @@ public class PdfServiceImplementation implements PdfService {
             case "centerBottomBorderBottom":
                 cellStyler.createCellStyleHorizontalCenterAndVerticalBottomBottomBorder(cell);
                 break;
+            case "leftBottomBorderBottom":
+                cellStyler.createCellStyleHorizontalLeftAndVerticalBottomBottomBorder(cell);
+                break;
         }
 
         return cell;
     }
 
     @Override
-    public void mergeUsingIText(int doc) throws IOException, DocumentException {
+    public void mergeUsingIText(List<PdfReader> pdfReaders, String path) throws IOException, DocumentException {
 
-        String path;
-        List<PdfReader> pdfReaders;
         Document document = new Document();
-
-        switch (doc) {
-            case 1:
-                path = WORK_LOG_PATH;
-                pdfReaders = List.of(new PdfReader(WORK_LOG_0_PATH), new PdfReader(WORK_LOG_3_PATH), new PdfReader(WORK_LOG_6_PATH));
-                break;
-            default:
-                return;
-        }
-
 
         FileOutputStream fos = new FileOutputStream(path);
         PdfWriter writer = PdfWriter.getInstance(document, fos);
@@ -834,7 +1005,7 @@ public class PdfServiceImplementation implements PdfService {
 
     private void deleteFile(Path path) {
         try {
-            Files.deleteIfExists(path);
+             Files.deleteIfExists(path);
             log.info("Файл {} удалён", path.getFileName());
         } catch (IOException e) {
             log.info("Сработало исключение {}", e.getMessage());
@@ -882,15 +1053,21 @@ public class PdfServiceImplementation implements PdfService {
         return monthsMap.get(month);
     }
 
-    private void addLongString(String works, PdfPTable table) {
-        while (works.length() >= 118) {
-            String worksRow = works.substring(0, 117);
+    private void addLongString(String works, PdfPTable table, Font font, int numberOfColumns) {
+        int currentLength = 118;
+
+        if (font == fontToFillInControl) {
+            currentLength = 98;
+        }
+
+        while (works.length() >= currentLength) {
+            String worksRow = works.substring(0, currentLength - 1);
             int lastSpace = worksRow.lastIndexOf(" ");
             worksRow = worksRow.substring(0, lastSpace);
-            table.addCell(createCell(worksRow, "centerBorderBottom", fontToFillIn, 36, 1, 0.0F));
+            table.addCell(createCell(worksRow, "centerBorderBottom", font, numberOfColumns, 1, 0.0F));
             works = works.replace(worksRow, "");
         }
-        table.addCell(createCell(works, "centerBorderBottom", fontToFillIn, 36, 1, 0.0F));
+        table.addCell(createCell(works, "centerBorderBottom", font, numberOfColumns, 1, 0.0F));
     }
 
     private void addMaterials(String materials, PdfPTable table) {
@@ -910,12 +1087,23 @@ public class PdfServiceImplementation implements PdfService {
             table.addCell(createCell("(наименования строительных  материалов (изделий),", "centerTopNoBorder",
                     subscript, 21, 1, 0.0F));
             materials = materials.replace(materialsRow, "");
-            addLongString(materials, table);
+            addLongString(materials, table, fontToFillIn, 36);
         }
         table.addCell(createCell("реквизиты сертификатов и (или) других документов, подтверждающих их качество и " +
-                "безопасность, в случае если необходимо указывать более 5 документов, указывается ссылка на " +
-                "их реестр, который является неотъемлемой частью акта)", "centerTopNoBorder",
+                        "безопасность, в случае если необходимо указывать более 5 документов, указывается ссылка на " +
+                        "их реестр, который является неотъемлемой частью акта)", "centerTopNoBorder",
                 subscript, 36, 1, 0.0F));
+    }
+
+    private String clearProjectNameForControls(String projectName, int choice) {
+        String[] split = projectName.split("\\.");
+        if (choice == 1) {
+            projectName = split[0] + "." + split[1];
+        } else {
+            projectName = split[2];
+        }
+
+        return projectName;
     }
 }
 

@@ -3,11 +3,14 @@ package com.act.act.service;
 import com.act.act.dto.*;
 import com.act.act.model.Act;
 import com.act.act.model.EntranceControl;
+import com.act.act.model.ExecutiveSchema;
 import com.act.act.repository.ActRepository;
 import com.act.act.repository.EntranceControlRepository;
+import com.act.act.repository.ExecutiveSchemaRepository;
 import com.act.exception.exception.NotFoundException;
 import com.act.material.model.Material;
 import com.act.material.repository.MaterialRepository;
+import com.act.material.service.MaterialService;
 import com.act.project.model.Project;
 import com.act.project.service.ProjectService;
 import com.act.subobject.model.SubObject;
@@ -18,7 +21,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.FileOutputStream;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
@@ -36,6 +41,7 @@ public class ActServiceImplementation implements ActService {
     private final WorkingService workingService;
     private final EntranceControlRepository entranceControlRepository;
     private final MaterialRepository materialRepository;
+    private final ExecutiveSchemaRepository schemaRepository;
     private final static String CONTROL_ACT = "Акт результатов входного контроля МТР и оборудования №";
     private final static String EXECUTIVE_SCHEMA = "Исполнительная схема №";
     private final static String SETS_OF_RULES = " СП 48.13330.2019 «Организация строительства»; СП 49.13330.2010" +
@@ -64,8 +70,12 @@ public class ActServiceImplementation implements ActService {
     }
 
     @Override
-    public List<EntranceControl> getAllEntranceControl() {
-        return entranceControlRepository.findAll();
+    public List<EntranceControlResponseDto> getAllEntranceControl() {
+        return entranceControlRepository
+                .findAll()
+                .stream()
+                .map(EntranceControlMapper.INSTANCE::toResponseDto)
+                .toList();
     }
 
     @Transactional
@@ -198,6 +208,43 @@ public class ActServiceImplementation implements ActService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
+    @Override
+    public void addSchema(MultipartFile file, Long id) {
+
+        Act act = findActOrNot(id);
+        ExecutiveSchema schema = new ExecutiveSchema();
+        schema.setAct(act);
+
+        String schemaNumber = act.getActNumber().replace("/", "_");
+        log.info(schemaNumber);
+
+        schema.setSchemasActNumber(schemaNumber);
+
+        String PATH_FOLDER = "C:\\Users\\PC\\IdeaProjects\\AOSR\\AOSR\\act\\executiveSchemas\\";
+        String path = PATH_FOLDER + schemaNumber + ".pdf";
+        schema.setSchemaPath(path);
+
+        try {
+            // Creating an object of FileOutputStream class
+            FileOutputStream fos = new FileOutputStream(path);
+            fos.write(file.getBytes());
+
+            // Closing the connection
+            fos.close();
+        } catch (Exception e) {
+            log.info(e.getMessage());
+        }
+
+        schemaRepository.save(schema);
+
+        log.info("Номер созданной схемы: {}", schema.getId());
+
+        act.setExecutiveSchema(schema);
+    }
+
+
+
     private void addEntranceControl(Act act, ActRequestDto requestDto) {
         List<ActRequestDto.ActMaterial> actMaterials = requestDto.getActMaterials();
         int counter = 1;
@@ -224,6 +271,7 @@ public class ActServiceImplementation implements ActService {
             assert material != null;
             entranceControl.setControlSheetNumbers(material.getNumberOfPages());
             entranceControl.setAuthor(material.getAuthor());
+            entranceControl.setMaterial(material);
 
             counter++;
 

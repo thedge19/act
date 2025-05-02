@@ -11,6 +11,7 @@ import com.itextpdf.text.DocumentException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
@@ -36,6 +37,7 @@ public class ActController {
 
     @GetMapping("/update/{id}")
     public ActUpdateResponseDto getUpdatedAct(@PathVariable long id) {
+
         return actService.getUpdatedAct(id);
     }
 
@@ -58,7 +60,7 @@ public class ActController {
     }
 
     @GetMapping("/entrance")
-    public List<EntranceControl> getEntranceControls() {
+    public List<EntranceControlResponseDto> getEntranceControls() {
         return actService.getAllEntranceControl();
     }
 
@@ -72,12 +74,11 @@ public class ActController {
         return actCreated;
     }
 
-    @PatchMapping("/{id}")
-    public Act update(@PathVariable long id,
-                            @RequestBody ActUpdateRequestDto requestDto) {
-        Act actUpdated = actService.update(id, requestDto);
-        log.info("Update Act: {}", actUpdated);
-        return actUpdated;
+    @PostMapping("/schema/{id}")
+    public void update(@PathVariable long id,
+                       @RequestParam("file") MultipartFile file) {
+        actService.addSchema(file, id);
+        log.info("Схема загружена");
     }
 
     @PatchMapping("/entrance/{id}")

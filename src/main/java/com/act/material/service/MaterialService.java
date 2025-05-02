@@ -1,13 +1,15 @@
 package com.act.material.service;
 
+import com.act.material.dto.MaterialResponseDto;
 import com.act.material.model.Material;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 public interface MaterialService {
-    Material get(Long id);
+    MaterialResponseDto get(Long id);
 
-    List<Material> getAll();
+    List<MaterialResponseDto> getAll();
 
     Material create(Material material);
 
@@ -16,4 +18,6 @@ public interface MaterialService {
     void delete(long id);
 
     Material findMaterialOrNot(long id);
+
+    void addCertificate(long id, MultipartFile file);
 }

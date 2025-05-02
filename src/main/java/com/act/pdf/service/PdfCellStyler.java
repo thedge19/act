@@ -79,4 +79,10 @@ public class PdfCellStyler {
         pdfPCell.setVerticalAlignment(Element.ALIGN_BOTTOM);
         pdfPCell.setBorder(Rectangle.BOTTOM);
     }
+
+    public void createCellStyleHorizontalLeftAndVerticalBottomBottomBorder(PdfPCell pdfPCell) {
+        pdfPCell.setHorizontalAlignment(Element.ALIGN_LEFT);
+        pdfPCell.setVerticalAlignment(Element.ALIGN_BOTTOM);
+        pdfPCell.setBorder(Rectangle.BOTTOM);
+    }
 }

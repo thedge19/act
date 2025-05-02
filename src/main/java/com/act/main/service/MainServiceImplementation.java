@@ -5,6 +5,7 @@ import com.act.registry.model.Registry;
 import com.act.registry.repository.RegistryRepository;
 import com.act.registry.service.RegistryService;
 import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.pdf.PdfReader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Slf4j
 @Service
@@ -26,6 +28,10 @@ public class MainServiceImplementation implements MainService {
     private final PdfService pdfService;
     public static final String REGISTRY_PATH = "C:\\Users\\PC\\Desktop\\work\\registry.pdf";
     public static final String REGISTRY_TEMP_PATH = "C:\\Users\\PC\\Desktop\\work\\temp_registry.pdf";
+    public static final String WORK_LOG_PATH = "C:\\Users\\PC\\Desktop\\work\\workLog.pdf";
+    public static final String WORK_LOG_0_PATH = "C:\\Users\\PC\\IdeaProjects\\AOSR\\AOSR\\act\\workLog0.pdf";
+    public static final String WORK_LOG_3_PATH = "C:\\Users\\PC\\Desktop\\work\\workLog3.pdf";
+    public static final String WORK_LOG_6_PATH = "C:\\Users\\PC\\Desktop\\work\\workLog6.pdf";
 
     @Transactional
     @Override
@@ -41,7 +47,10 @@ public class MainServiceImplementation implements MainService {
 
             pdfService.exportWorkLog3ToPdf();
             pdfService.exportWorkLog6ToPdf();
-            pdfService.mergeUsingIText(1);
+
+            List<PdfReader> pdfReaders = List.of(new PdfReader(WORK_LOG_0_PATH), new PdfReader(WORK_LOG_3_PATH), new PdfReader(WORK_LOG_6_PATH));
+
+            pdfService.mergeUsingIText(pdfReaders, WORK_LOG_PATH);
 
             workLogregistry.setNumberOfSheets(pdfService.numberOfPages("workLog"));
             workLogregistry.setRowNumber(registryRepository.countByMonthId(id) + 1);

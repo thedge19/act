@@ -12,4 +12,6 @@ public interface EntranceControlMapper {
 
     @Mapping(target = "date", source = "date", dateFormat = "dd.MM.yyyy")
     EntranceControlExportDto toDto(EntranceControl entranceControl);
+
+    EntranceControlResponseDto toResponseDto(EntranceControl entranceControl);
 }

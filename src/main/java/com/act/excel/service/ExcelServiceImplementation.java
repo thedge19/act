@@ -33,7 +33,7 @@ public class ExcelServiceImplementation implements ExcelService {
     private final ActService actService;
     private final EntranceControlRepository entranceControlRepository;
 
-    String path = "C:\\Users\\PC\\IdeaProjects\\AOSR\\AOSR\\act\\act.xlsx";
+    String path = "C:\\Users\\PC\\IdeaProjects\\AOSR\\act\\act.xlsx";
     File file = new File(path);
 
     @Override
@@ -151,7 +151,7 @@ public class ExcelServiceImplementation implements ExcelService {
 
     @Override
     public void writeExcelControl() throws IOException {
-        String path = "C:\\Users\\PC\\IdeaProjects\\AOSR\\AOSR\\act\\entrance_control.xlsx";
+        String path = "C:\\Users\\PC\\IdeaProjects\\AOSR\\act\\entrance_control.xlsx";
         File file = new File(path);
 
         log.info("Здесь");

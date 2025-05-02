@@ -1,10 +1,12 @@
 package com.act.material.controller;
 
+import com.act.material.dto.MaterialResponseDto;
 import com.act.material.model.Material;
 import com.act.material.service.MaterialService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -18,15 +20,15 @@ public class MaterialController {
     private final MaterialService materialService;
 
     @GetMapping("/{id}")
-    public Material get(@PathVariable Long id) {
+    public MaterialResponseDto get(@PathVariable Long id) {
         log.info("Get Material by id: {}", id);
-        Material material = materialService.get(id);
+        MaterialResponseDto material = materialService.get(id);
         log.info("Get Material: {}", material);
         return material;
     }
 
     @GetMapping
-    public List<Material> getAll() {
+    public List<MaterialResponseDto> getAll() {
         log.info("Get all Materials");
         return materialService.getAll();
     }
@@ -34,10 +36,15 @@ public class MaterialController {
     @PostMapping
     public Material create(
             @RequestBody Material material) {
-        log.info("Create Material: {}", material.getName());
         Material materialCreated = materialService.create(material);
         log.info("Create Material: {}", materialCreated);
         return materialCreated;
+    }
+
+    @PostMapping("/certificate/{id}")
+    public void addCertificate(@PathVariable Long id, @RequestParam("file") MultipartFile file) {
+        log.info("Certificate Material: {}", id);
+        materialService.addCertificate(id, file);
     }
 
     @PatchMapping("/{id}")
